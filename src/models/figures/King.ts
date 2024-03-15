@@ -5,6 +5,8 @@ import blackLogo from "../../assets/black-king.png";
 import whiteLogo from "../../assets/white-king.png";
 
 export class King extends Figure {
+  isFirstStep: boolean = true;
+
   constructor(color: Colors, cell: Cell) {
     super(color, cell);
     this.logo = color === Colors.BLACK ? blackLogo : whiteLogo;
@@ -25,6 +27,20 @@ export class King extends Figure {
       return true;
     }
 
+    if (
+      this.isFirstStep &&
+      this.cell.castling(target) &&
+      (target.x === this.cell.x + 2 || target.x === this.cell.x - 2)
+    ) {
+      return true;
+    }
+
     return false;
+  }
+
+  moveFigure(target: Cell): void {
+    super.moveFigure(target);
+
+    this.isFirstStep = false;
   }
 }

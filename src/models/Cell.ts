@@ -1,6 +1,6 @@
 import { Board } from "./Board";
 import { Colors } from "./Colors";
-import { Figure } from "./figures/Figure";
+import { Figure, FigureNames } from "./figures/Figure";
 
 export class Cell {
   readonly x: number;
@@ -29,6 +29,13 @@ export class Cell {
 
   isEmpty(): boolean {
     return this.figure === null;
+  }
+
+  isRookOrKing(): boolean {
+    return (
+      this.figure?.name === FigureNames.ROOK ||
+      this.figure?.name === FigureNames.KING
+    );
   }
 
   isEnemy(target: Cell): boolean {
@@ -90,19 +97,104 @@ export class Cell {
     return true;
   }
 
+  castling(target: Cell): boolean {
+    if (this.y !== target.y) {
+      return false;
+    }
+
+    const min = Math.min(this.x, target.x);
+    const max = Math.max(this.x, target.x);
+
+    for (let x = min + 1; x < max; x++) {
+      if (this.board.getCell(x, this.y).isRookOrKing()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  moveCastle(target: Cell) {
+    let kingCell = this.board.getCell(4, 4);
+    let leftRook = this.board.getCell(4, 4);
+    let rightRook = this.board.getCell(4, 4);
+    let kingLeftTarget;
+    let kingRightTarget;
+
+    if (this.figure?.color === Colors.WHITE) {
+      kingCell = this.board.getCell(4, 7);
+      leftRook = this.board.getCell(0, 7);
+      rightRook = this.board.getCell(7, 7);
+      kingLeftTarget = this.board.getCell(2, 7);
+      kingRightTarget = this.board.getCell(6, 7);
+    }
+
+    if (this.figure?.color === Colors.BLACK) {
+      kingCell = this.board.getCell(4, 0);
+      leftRook = this.board.getCell(0, 0);
+      rightRook = this.board.getCell(7, 0);
+      kingLeftTarget = this.board.getCell(2, 0);
+      kingRightTarget = this.board.getCell(6, 0);
+    }
+
+    if (
+      this.figure?.name === FigureNames.KING &&
+      this.figure.cell === kingCell
+    ) {
+      if (this.figure.color === Colors.WHITE) {
+        if (rightRook.figure !== null && target === kingRightTarget) {
+          this.board.getCell(5, 7).setFigure(rightRook.figure);
+
+          rightRook.figure = null;
+
+          target.setFigure(this.figure);
+        }
+
+        if (leftRook.figure !== null && target === kingLeftTarget) {
+          this.board.getCell(3, 7).setFigure(leftRook.figure);
+
+          leftRook.figure = null;
+
+          target.setFigure(this.figure);
+        }
+      }
+
+      if (this.figure.color === Colors.BLACK) {
+        if (rightRook.figure !== null && target === kingRightTarget) {
+          this.board.getCell(5, 0).setFigure(rightRook.figure);
+
+          rightRook.figure = null;
+
+          target.setFigure(this.figure);
+        }
+
+        if (leftRook.figure !== null && target === kingLeftTarget) {
+          this.board.getCell(3, 0).setFigure(leftRook.figure);
+
+          leftRook.figure = null;
+
+          target.setFigure(this.figure);
+        }
+      }
+    }
+  }
+
   setFigure(figure: Figure) {
     this.figure = figure;
     this.figure.cell = this;
   }
 
   addLostFigure(figure: Figure) {
-    figure.color === Colors.BLACK
-      ? this.board.lostBlackFigures.push(figure)
-      : this.board.lostWhiteFigures.push(figure);
+    if (figure.name !== FigureNames.KING) {
+      figure.color === Colors.BLACK
+        ? this.board.lostBlackFigures.push(figure)
+        : this.board.lostWhiteFigures.push(figure);
+    }
   }
 
   moveFigure(target: Cell) {
     if (this.figure && target && this.figure.canMove(target)) {
+      this.moveCastle(target);
+
       this.figure.moveFigure(target);
 
       if (target.figure) {

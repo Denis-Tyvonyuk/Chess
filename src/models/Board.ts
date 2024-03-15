@@ -86,10 +86,10 @@ export class Board {
 
   public addFigures() {
     this.addPawns();
-    this.addKnights();
+    //this.addKnights();
     this.addKings();
-    this.addBishops();
-    this.addQueens();
+    // this.addBishops();
+    // this.addQueens();
     this.addRooks();
   }
 }
