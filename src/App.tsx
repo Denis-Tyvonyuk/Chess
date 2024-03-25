@@ -6,6 +6,7 @@ import { Player } from "./models/Player";
 import { Colors } from "./models/Colors";
 import LostFigures from "./components/LostFigures";
 import Timer from "./components/Timer";
+import MoveList from "./components/MoveList";
 
 function App() {
   const [board, setBoard] = useState(new Board());
@@ -43,6 +44,13 @@ function App() {
       <div>
         <LostFigures title={"black figures"} figures={board.lostBlackFigures} />
         <LostFigures title={"white figures"} figures={board.lostWhiteFigures} />
+      </div>
+      <div>
+        <MoveList
+          title={"move list"}
+          figures={board.lastFigure}
+          cells={board.Move}
+        />
       </div>
     </div>
   );

@@ -178,6 +178,44 @@ export class Cell {
     }
   }
 
+  enPassant(target: Cell): boolean {
+    let leftPawn = this.board.getCell(this.x, this.y);
+    let rightPawn = this.board.getCell(this.x, this.y);
+    let targetY = this.y - 1;
+
+    if (this.figure?.color === Colors.BLACK) {
+      targetY = this.y + 1;
+    }
+
+    if (this.x !== 7) {
+      rightPawn = this.board.getCell(this.x + 1, this.y);
+    }
+    if (this.x !== 0) {
+      leftPawn = this.board.getCell(this.x - 1, this.y);
+    }
+
+    if (
+      this.figure?.cell.isEnemy(leftPawn) ||
+      this.figure?.cell.isEnemy(rightPawn)
+    )
+      if (
+        (leftPawn?.figure?.name === FigureNames.PAWN &&
+          target.x === leftPawn.x &&
+          target.y === targetY) ||
+        (rightPawn?.figure?.name === FigureNames.PAWN &&
+          target.x === rightPawn.x &&
+          target.y === targetY)
+      ) {
+        return true;
+      }
+    return false;
+  }
+
+  moveEnPassant(target: Cell) {
+    if (this.figure?.name === FigureNames.PAWN) {
+    }
+  }
+
   setFigure(figure: Figure) {
     this.figure = figure;
     this.figure.cell = this;
@@ -191,6 +229,13 @@ export class Cell {
     }
   }
 
+  addLastMove(figure: Figure) {
+    let x = figure.cell;
+
+    this.board.Move.push(x);
+    this.board.lastFigure.push(figure);
+  }
+
   moveFigure(target: Cell) {
     if (this.figure && target && this.figure.canMove(target)) {
       this.moveCastle(target);
@@ -202,6 +247,9 @@ export class Cell {
       }
 
       target.setFigure(this.figure);
+
+      this.addLastMove(this.figure);
+
       this.figure = null;
     }
   }

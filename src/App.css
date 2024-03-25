@@ -55,3 +55,15 @@
   margin-left: 50px;
   background-color: lightgray;
 }
+
+.listMove {
+  height: calc(100vh);
+  width: 150px;
+  background-color: aqua;
+}
+
+.listvalue {
+  float: left;
+  width: 50px;
+  display: flex;
+}

@@ -12,6 +12,8 @@ export class Board {
   cells: Cell[][] = [];
   lostBlackFigures: Figure[] = [];
   lostWhiteFigures: Figure[] = [];
+  lastFigure: Figure[] = [];
+  Move: Cell[] = [];
 
   public initCells() {
     for (let i = 0; i < 8; i++) {
@@ -19,13 +21,16 @@ export class Board {
 
       for (let j = 0; j < 8; j++) {
         if ((i + j) % 2 !== 0) {
-          row.push(new Cell(this, i, j, Colors.BLACK, null)); //black cell
+          row.push(new Cell(this, i, j, Colors.BLACK, null)); // black cell
         } else {
-          row.push(new Cell(this, i, j, Colors.WHITE, null)); //white cell
+          row.push(new Cell(this, i, j, Colors.WHITE, null)); // white cell
         }
       }
       this.cells.push(row);
     }
+
+    // Add figures after initializing cells
+    this.addFigures();
   }
 
   public getCopyBoard(): Board {
@@ -33,6 +38,8 @@ export class Board {
     newBoard.cells = this.cells;
     newBoard.lostBlackFigures = this.lostBlackFigures;
     newBoard.lostWhiteFigures = this.lostWhiteFigures;
+    newBoard.lastFigure = this.lastFigure;
+    newBoard.Move = this.Move;
 
     return newBoard;
   }
@@ -86,10 +93,10 @@ export class Board {
 
   public addFigures() {
     this.addPawns();
-    //this.addKnights();
+    this.addKnights();
     this.addKings();
-    // this.addBishops();
-    // this.addQueens();
+    this.addBishops();
+    this.addQueens();
     this.addRooks();
   }
 }

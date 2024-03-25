@@ -24,16 +24,21 @@ const BoardComponent: FC<BoardProps> = ({
   }, [selectedCell]);
 
   function click(cell: Cell) {
+    if (!currentPlayer) {
+      // Handle case when there is no current player (e.g., display a message)
+      return;
+    }
+
     if (
       selectedCell &&
       selectedCell !== cell &&
       selectedCell.figure?.canMove(cell)
     ) {
       selectedCell.moveFigure(cell);
-      swapPlayer();
       setSelectedCell(null);
+      swapPlayer(); // Call swapPlayer after moving the figure
     } else {
-      if (cell.figure?.color === currentPlayer?.color) {
+      if (cell.figure?.color === currentPlayer.color) {
         setSelectedCell(cell);
       }
     }
@@ -46,12 +51,16 @@ const BoardComponent: FC<BoardProps> = ({
 
   function updateBoard() {
     const newBoard = board.getCopyBoard();
+    //console.log(newBoard.Move[1].x);
     setBoard(newBoard);
   }
 
   return (
     <div>
-      <h3>Current player {currentPlayer?.color}</h3>
+      <h3>
+        Current player:{" "}
+        {currentPlayer ? currentPlayer.color : "Waiting for player"}
+      </h3>
       <div className="board">
         {board.cells.map((row, rowIndex) => (
           <div key={rowIndex} className="board-row">
