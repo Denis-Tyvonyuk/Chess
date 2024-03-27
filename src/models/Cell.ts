@@ -182,9 +182,11 @@ export class Cell {
     let leftPawn = this.board.getCell(this.x, this.y);
     let rightPawn = this.board.getCell(this.x, this.y);
     let targetY = this.y - 1;
+    let enemyPawnY = 3;
 
     if (this.figure?.color === Colors.BLACK) {
       targetY = this.y + 1;
+      enemyPawnY = 4;
     }
 
     if (this.x !== 7) {
@@ -194,25 +196,48 @@ export class Cell {
       leftPawn = this.board.getCell(this.x - 1, this.y);
     }
 
+    const lastMove = this.board.lastFigure.slice(-1)[0];
+
     if (
-      this.figure?.cell.isEnemy(leftPawn) ||
-      this.figure?.cell.isEnemy(rightPawn)
-    )
+      (leftPawn?.figure?.name === FigureNames.PAWN &&
+        target.x === leftPawn.x &&
+        leftPawn.figure === lastMove) ||
+      (rightPawn?.figure?.name === FigureNames.PAWN &&
+        target.x === rightPawn.x &&
+        rightPawn.figure === lastMove)
+    ) {
       if (
-        (leftPawn?.figure?.name === FigureNames.PAWN &&
-          target.x === leftPawn.x &&
-          target.y === targetY) ||
-        (rightPawn?.figure?.name === FigureNames.PAWN &&
-          target.x === rightPawn.x &&
-          target.y === targetY)
+        this.figure?.cell.isEnemy(leftPawn) ||
+        this.figure?.cell.isEnemy(rightPawn)
       ) {
-        return true;
+        if (target.y === targetY && lastMove.cell.y === enemyPawnY) {
+          return true;
+        }
       }
+    }
     return false;
   }
 
   moveEnPassant(target: Cell) {
     if (this.figure?.name === FigureNames.PAWN) {
+      let rightPawn = this.board.getCell(this.x, this.y);
+      let leftPawn = this.board.getCell(this.x, this.y);
+
+      if (this.x !== 7) {
+        rightPawn = this.board.getCell(this.x + 1, this.y);
+      }
+      if (this.x !== 0) {
+        leftPawn = this.board.getCell(this.x - 1, this.y);
+      }
+
+      if (target.x === this.x + 1 && rightPawn.figure !== null) {
+        this.addLostFigure(rightPawn.figure);
+        rightPawn.figure = null;
+      }
+      if (target.x === this.x - 1 && leftPawn.figure !== null) {
+        this.addLostFigure(leftPawn.figure);
+        leftPawn.figure = null;
+      }
     }
   }
 
@@ -230,15 +255,17 @@ export class Cell {
   }
 
   addLastMove(figure: Figure) {
-    let x = figure.cell;
-
-    this.board.Move.push(x);
+    this.board.Move.push(figure.cell);
     this.board.lastFigure.push(figure);
+
+    let lastMove = this.board.Move.slice(-1)[0];
+    console.log(lastMove.figure);
   }
 
   moveFigure(target: Cell) {
     if (this.figure && target && this.figure.canMove(target)) {
       this.moveCastle(target);
+      this.moveEnPassant(target);
 
       this.figure.moveFigure(target);
 
