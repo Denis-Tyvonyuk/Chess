@@ -1,6 +1,8 @@
 import { Board } from "./Board";
 import { Colors } from "./Colors";
 import { Figure, FigureNames } from "./figures/Figure";
+import { Knight } from "./figures/Knight";
+import { Queen } from "./figures/Queen";
 
 export class Cell {
   readonly x: number;
@@ -44,6 +46,96 @@ export class Cell {
     }
 
     return false;
+  }
+
+  isAttack(target: Cell) {
+    return target.figure?.canMove;
+  }
+
+  kingIsUnderAttack(color: Colors): Cell[] | null {
+    const cells = this.allFigures();
+
+    let friendFigure = color === Colors.WHITE ? cells[0] : cells[1];
+    let enemyFigure = color === Colors.WHITE ? cells[1] : cells[0];
+    let kingCell =
+      color === Colors.WHITE
+        ? this.board.getCell(4, 7)
+        : this.board.getCell(4, 0);
+
+    let attackersOnTheKing: Cell[] = [];
+    let defendCell: Cell[] = [];
+
+    friendFigure.forEach((figure) => {
+      if (figure.figure?.name === FigureNames.KING) {
+        kingCell = figure;
+      }
+    });
+    // console.log(kingCell);
+    enemyFigure.forEach((figure) => {
+      if (figure.figure && figure.figure.canMove(kingCell)) {
+        attackersOnTheKing.push(figure);
+      }
+    });
+
+    if (kingCell) {
+      if (attackersOnTheKing.length === 1) {
+        const attacker = attackersOnTheKing[0];
+        const xDiff = attacker.x - kingCell.x;
+        const yDiff = attacker.y - kingCell.y;
+
+        if (xDiff !== 0 && yDiff !== 0) {
+          for (let i = 1; i < Math.abs(xDiff); i++) {
+            const newX = kingCell.x + i * Math.sign(xDiff);
+            const newY = kingCell.y + i * Math.sign(yDiff);
+            defendCell.push(this.board.getCell(newX, newY));
+          }
+        } else if (xDiff === 0 && yDiff !== 0) {
+          for (let i = 1; i < Math.abs(yDiff); i++) {
+            const newX = kingCell.x;
+            const newY = kingCell.y + i * Math.sign(yDiff);
+            defendCell.push(this.board.getCell(newX, newY));
+          }
+        } else if (xDiff !== 0 && yDiff === 0) {
+          for (let i = 1; i < Math.abs(xDiff); i++) {
+            const newX = kingCell.x + i * Math.sign(xDiff);
+            const newY = kingCell.y;
+            defendCell.push(this.board.getCell(newX, newY));
+          }
+        }
+      }
+
+      if (attackersOnTheKing.length === 1) {
+        defendCell.push(attackersOnTheKing[0]);
+        return defendCell;
+      }
+
+      if (attackersOnTheKing.length > 1) return defendCell;
+    }
+    return null;
+  }
+
+  allFigures() {
+    let allCell: Cell[] = [];
+    let blackFigures: Cell[] = [];
+
+    let whiteFigures: Cell[] = [];
+
+    this.board.cells.forEach((row) => {
+      row.forEach((cell) => {
+        allCell.push(cell);
+      });
+    });
+
+    allCell.forEach((cell) => {
+      if (cell.figure?.color === Colors.BLACK) {
+        blackFigures.push(cell);
+      }
+      if (cell.figure?.color === Colors.WHITE) {
+        whiteFigures.push(cell);
+      }
+    });
+
+    return [whiteFigures, blackFigures];
   }
 
   isEmptyVertical(target: Cell): boolean {
@@ -106,7 +198,10 @@ export class Cell {
     const max = Math.max(this.x, target.x);
 
     for (let x = min + 1; x < max; x++) {
-      if (this.board.getCell(x, this.y).isRookOrKing()) {
+      if (
+        this.board.getCell(x, this.y).isRookOrKing() ||
+        !this.board.getCell(x, this.y).isEmpty()
+      ) {
         return false;
       }
     }
@@ -230,13 +325,43 @@ export class Cell {
         leftPawn = this.board.getCell(this.x - 1, this.y);
       }
 
-      if (target.x === this.x + 1 && rightPawn.figure !== null) {
+      if (
+        target.x === this.x + 1 &&
+        rightPawn.figure !== null &&
+        this.figure?.cell.isEnemy(rightPawn)
+      ) {
         this.addLostFigure(rightPawn.figure);
         rightPawn.figure = null;
       }
-      if (target.x === this.x - 1 && leftPawn.figure !== null) {
+      if (
+        target.x === this.x - 1 &&
+        leftPawn.figure !== null &&
+        this.figure?.cell.isEnemy(leftPawn)
+      ) {
         this.addLostFigure(leftPawn.figure);
         leftPawn.figure = null;
+      }
+    }
+  }
+
+  pawnInEnd(target: Cell) {
+    if (
+      this.figure?.name === FigureNames.PAWN &&
+      (target.y === 7 || target.y === 0)
+    ) {
+      return true;
+    }
+  }
+  pawnTransform(target: Cell, figure: "queen" | "knight") {
+    if (this.figure) {
+      if (figure === "queen") {
+        this.figure = new Queen(this.figure.color, target);
+      } else if (figure === "knight") {
+        this.figure = new Knight(this.figure.color, target);
+        console.log(this.figure.logo);
+      } else {
+        console.error("Invalid choice");
+        return;
       }
     }
   }
@@ -257,9 +382,6 @@ export class Cell {
   addLastMove(figure: Figure) {
     this.board.Move.push(figure.cell);
     this.board.lastFigure.push(figure);
-
-    let lastMove = this.board.Move.slice(-1)[0];
-    console.log(lastMove.figure);
   }
 
   moveFigure(target: Cell) {
@@ -276,6 +398,7 @@ export class Cell {
       target.setFigure(this.figure);
 
       this.addLastMove(this.figure);
+      // this.pawnTransform(target, "knight");
 
       this.figure = null;
     }

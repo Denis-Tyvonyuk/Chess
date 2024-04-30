@@ -16,6 +16,11 @@ export class King extends Figure {
   canMove(target: Cell): boolean {
     if (!super.canMove(target)) return false;
 
+    let enemyFigures =
+      this.color === Colors.BLACK
+        ? this.cell.allFigures()[0]
+        : this.cell.allFigures()[1];
+
     if (
       (target.x === this.cell.x + 1 ||
         target.x === this.cell.x - 1 ||
@@ -24,6 +29,11 @@ export class King extends Figure {
         target.y === this.cell.y + 1 ||
         target.y === this.cell.y)
     ) {
+      for (let enemyFigure of enemyFigures) {
+        if (enemyFigure.figure && enemyFigure.figure.canMove(target)) {
+          return false;
+        }
+      }
       return true;
     }
 

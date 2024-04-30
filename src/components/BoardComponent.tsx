@@ -3,6 +3,7 @@ import { Board } from "../models/Board";
 import CellComponent from "./CellComponent";
 import { Cell } from "../models/Cell";
 import { Player } from "../models/Player";
+import { FigureNames } from "../models/figures/Figure";
 
 interface BoardProps {
   board: Board;
@@ -28,6 +29,17 @@ const BoardComponent: FC<BoardProps> = ({
       // Handle case when there is no current player (e.g., display a message)
       return;
     }
+    let attackersCell;
+    let mat = false;
+
+    const aCell = cell.kingIsUnderAttack(currentPlayer.color);
+
+    if (aCell && aCell[0] !== undefined) {
+      attackersCell = aCell;
+    }
+    if (aCell?.length === 0) {
+      mat = true;
+    }
 
     if (
       selectedCell &&
@@ -35,10 +47,37 @@ const BoardComponent: FC<BoardProps> = ({
       selectedCell.figure?.canMove(cell)
     ) {
       selectedCell.moveFigure(cell);
+
       setSelectedCell(null);
-      swapPlayer(); // Call swapPlayer after moving the figure
+      if (!pawnInEnd(cell)) {
+        swapPlayer();
+      } // Call swapPlayer after moving the figure
     } else {
-      if (cell.figure?.color === currentPlayer.color) {
+      const isAttacked = attackersCell;
+      const canMoveToAttacker = attackersCell?.some((cells) =>
+        cell.figure?.canMove(cells)
+      );
+      console.log(mat);
+
+      if (!isAttacked && cell.figure?.color === currentPlayer.color && !mat) {
+        setSelectedCell(cell);
+      } else {
+        if (
+          (isAttacked &&
+            cell.figure?.color === currentPlayer.color &&
+            canMoveToAttacker) ||
+          (cell.figure?.name === FigureNames.KING &&
+            cell.figure?.color === currentPlayer.color)
+        ) {
+          setSelectedCell(cell);
+        }
+      }
+
+      if (
+        mat &&
+        cell.figure?.name === FigureNames.KING &&
+        cell.figure?.color === currentPlayer.color
+      ) {
         setSelectedCell(cell);
       }
     }
@@ -55,6 +94,16 @@ const BoardComponent: FC<BoardProps> = ({
     setBoard(newBoard);
   }
 
+  function pawnInEnd(cell: Cell) {
+    return cell?.pawnInEnd(cell);
+  }
+
+  function pawnTransform(target: Cell, figure: "queen" | "knight") {
+    target.pawnTransform(target, figure);
+    updateBoard();
+    swapPlayer();
+  }
+
   return (
     <div>
       <h3>
@@ -68,6 +117,8 @@ const BoardComponent: FC<BoardProps> = ({
               <CellComponent
                 key={cell.id}
                 click={click}
+                pawnInEnd={pawnInEnd}
+                pawnTransform={pawnTransform}
                 cell={cell}
                 selected={
                   cell.x === selectedCell?.x && cell.y === selectedCell?.y

@@ -3,6 +3,8 @@ import { Colors } from "../Colors";
 import { Figure, FigureNames } from "./Figure";
 import blackLogo from "../../assets/black-pawn.png";
 import whiteLogo from "../../assets/white-pawn.png";
+import { Queen } from "./Queen";
+import { Knight } from "./Knight";
 
 export class Pawn extends Figure {
   isFirstStep: boolean = true;
@@ -24,7 +26,8 @@ export class Pawn extends Figure {
       (target.y === this.cell.y + direction ||
         (this.isFirstStep && target.y === this.cell.y + firstStepDirection)) &&
       target.x === this.cell.x &&
-      this.cell.board.getCell(target.x, target.y).isEmpty()
+      target.isEmpty() &&
+      this.cell.isEmptyVertical(target)
     ) {
       return true;
     }

@@ -35,6 +35,16 @@ const Timer: FC<TimeProps> = ({ currentPlayer, restart }) => {
     setWhiteTime((prev) => prev - 1);
   }
 
+  function gameOver(): string | null {
+    if (blackTime <= 0) {
+      return "white win";
+    }
+    if (whiteTime <= 0) {
+      return "black win";
+    }
+    return null;
+  }
+
   const handleRestart = () => {
     setWhiteTime(300);
     setBlackTime(300);
@@ -46,8 +56,19 @@ const Timer: FC<TimeProps> = ({ currentPlayer, restart }) => {
       <div>
         <button onClick={handleRestart}>Restart game</button>
       </div>
-      <h2>Black - {blackTime}</h2>
-      <h2>White - {whiteTime}</h2>
+      {gameOver() === null && <h2>Black - {blackTime}</h2>}
+      {gameOver() === null && <h2>White - {whiteTime}</h2>}
+
+      {gameOver() === "white win" && (
+        <div className="end">
+          <h2>white win</h2>
+        </div>
+      )}
+      {gameOver() === "black win" && (
+        <div className="end">
+          <h2>black win</h2>
+        </div>
+      )}
     </div>
   );
 };

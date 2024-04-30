@@ -67,3 +67,8 @@
   width: 50px;
   display: flex;
 }
+
+.pawnTransform {
+  position: absolute;
+  z-index: 1;
+}
